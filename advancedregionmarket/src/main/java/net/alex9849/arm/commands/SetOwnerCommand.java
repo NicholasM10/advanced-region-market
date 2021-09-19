@@ -11,6 +11,7 @@ import net.alex9849.arm.regions.Region;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -28,23 +29,45 @@ public class SetOwnerCommand extends BasicArmCommand {
 
     @Override
     protected boolean runCommandLogic(CommandSender sender, String command, String commandLabel) throws InputException, CmdSyntaxException {
-        Player playersender = (Player) sender;
-        String[] args = command.split(" ");
+        if(!(sender instanceof ConsoleCommandSender))
+        {
+            Player playersender = (Player) sender;
+            String[] args = command.split(" ");
 
-        Region region = getPlugin().getRegionManager()
-                .getRegionbyNameAndWorldCommands(args[1], playersender.getWorld().getName());
-        if (region == null) {
-            throw new InputException(sender, Messages.REGION_DOES_NOT_EXIST);
+            Region region = getPlugin().getRegionManager()
+                    .getRegionbyNameAndWorldCommands(args[1], playersender.getWorld().getName());
+            if (region == null) {
+                throw new InputException(sender, Messages.REGION_DOES_NOT_EXIST);
+            }
+
+            OfflinePlayer player = Bukkit.getOfflinePlayer(args[2]);
+            if (player == null) {
+                throw new InputException(sender, "Player not found!");
+            }
+
+            region.setSold(player);
+            sender.sendMessage(Messages.PREFIX + "Owner set!");
+            return true;
+        } else {
+            //Player playersender = (Player) sender;
+            String[] args = command.split(" ");
+
+            OfflinePlayer player = Bukkit.getOfflinePlayer(args[2]);
+            if (player == null) {
+                throw new InputException(sender, "Player not found!");
+            }
+
+            Region region = getPlugin().getRegionManager()
+                    .getRegionbyNameAndWorldCommands(args[1], player.getPlayer().getWorld().getName());
+            if (region == null) {
+                throw new InputException(sender, Messages.REGION_DOES_NOT_EXIST);
+            }
+
+            region.setSold(player);
+            Bukkit.getServer().getConsoleSender().sendMessage(Messages.PREFIX + "Owner set!");;
+            //sender.sendMessage(Messages.PREFIX + "Owner set!");
+            return true;
         }
-
-        OfflinePlayer player = Bukkit.getOfflinePlayer(args[2]);
-        if (player == null) {
-            throw new InputException(sender, "Player not found!");
-        }
-
-        region.setSold(player);
-        sender.sendMessage(Messages.PREFIX + "Owner set!");
-        return true;
     }
 
     @Override
