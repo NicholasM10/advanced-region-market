@@ -7,6 +7,8 @@ import net.alex9849.arm.minifeatures.PlayerRegionRelationship;
 import net.alex9849.arm.regionkind.RegionKind;
 import net.alex9849.arm.regions.Region;
 import net.alex9849.arm.util.Tuple;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -48,7 +50,8 @@ public abstract class RegionOptionModifyCommand<SettingsObj> extends OptionModif
     @Override
     protected final Tuple<String, List<Region>> getObjectFromCommand(CommandSender sender, String command) throws InputException {
         String[] args = command.split(" ");
-        Player player = (Player) sender;
+        Player player = Bukkit.getPlayer(args[2]);
+        //Player player = args[2];
 
         if (command.matches(regex_massaction)) {
             String[] splittedRegionKindArg = args[1].split(":", 2);
@@ -82,13 +85,13 @@ public abstract class RegionOptionModifyCommand<SettingsObj> extends OptionModif
         for(int i = 2; i < args.length; i++) {
             settingsArgs.add(args[i]);
         }
-        return getSettingFromString((Player) sender, Messages.getStringList(settingsArgs, x -> x, " "));
+        return getSettingFromString(null, Messages.getStringList(settingsArgs, x -> x, " "));
     }
 
     @Override
     protected final void applySetting(CommandSender sender, Tuple<String, List<Region>> tuple, SettingsObj setting) throws InputException {
         for(Region region : tuple.getValue2()) {
-            applySetting((Player) sender, region, setting);
+            applySetting(null, region, setting);
         }
     }
 
