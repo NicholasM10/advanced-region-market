@@ -61,9 +61,9 @@ public abstract class BasicArmCommand {
     }
 
     public boolean runCommand(CommandSender sender, String command, String commandLabel) throws InputException, CmdSyntaxException, NoPermissionException {
-        if (!this.isConsoleCommand() && sender instanceof ConsoleCommandSender) {
-            throw new InputException(sender, Messages.COMMAND_ONLY_INGAME);
-        }
+        //if (!this.isConsoleCommand() && sender instanceof ConsoleCommandSender) {
+            //throw new InputException(sender, Messages.COMMAND_ONLY_INGAME);
+        //}
 
         if (sender instanceof Player) {
             Player player = (Player) sender;

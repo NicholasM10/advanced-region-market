@@ -260,29 +260,9 @@ public class AdvancedRegionMarket extends JavaPlugin {
         }, 1800, 6000);
 
         //Enable bStats
-        BStatsAnalytics bStatsAnalytics = new BStatsAnalytics();
-        bStatsAnalytics.register(this);
+        //BStatsAnalytics bStatsAnalytics = new BStatsAnalytics();
+        //bStatsAnalytics.register(this);
         //Enable own analytics
-        try {
-            this.analytics = Analytics.genInstance(this, new URL("https://mc-analytics.alex9849.net"), () -> {
-                Map<String, String> pluginSpecificData = new LinkedHashMap<>();
-                BStatsAnalytics.RegionStatistics rs = BStatsAnalytics.getRegionStatistics();
-                int totalRegions = rs.getAvailableContractRegions();
-                totalRegions += rs.getAvailableRentRegions();
-                totalRegions += rs.getAvailableSellRegions();
-                totalRegions += rs.getSoldContractRegions();
-                totalRegions += rs.getSoldRentRegions();
-                totalRegions += rs.getSoldSellRegions();
-                pluginSpecificData.put("regionsTotal", totalRegions + "");
-                pluginSpecificData.put("regionsSell", (rs.getAvailableSellRegions() + rs.getSoldSellRegions()) + "");
-                pluginSpecificData.put("regionsRent", (rs.getAvailableRentRegions() + rs.getSoldRentRegions()) + "");
-                pluginSpecificData.put("regionsContract", (rs.getAvailableContractRegions() + rs.getSoldContractRegions()) + "");
-                return pluginSpecificData;
-            });
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-
     }
 
     public void onDisable() {
