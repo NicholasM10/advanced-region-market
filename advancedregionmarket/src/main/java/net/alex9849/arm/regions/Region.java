@@ -698,19 +698,13 @@ public abstract class Region implements Saveable {
         }
 
         boolean isPlayerInLimit = AdvancedRegionMarket.getInstance().getLimitGroupManager().isCanBuyAnother(player, this.getRegionKind());
-        PreBuyEvent preBuyEvent = new PreBuyEvent(this, player, isPlayerInLimit);
-        Bukkit.getServer().getPluginManager().callEvent(preBuyEvent);
-        if (preBuyEvent.isCancelled()) {
-            return;
-        }
-        isPlayerInLimit = preBuyEvent.isPlayerInLimit();
-        boolean isNoMoneyTransfer = preBuyEvent.isNoMoneyTransfer();
+
 
         if (!isPlayerInLimit) {
             throw new OutOfLimitExeption(this.replaceVariables(Messages.REGION_BUY_OUT_OF_LIMIT));
         }
 
-        if (!isNoMoneyTransfer && AdvancedRegionMarket.getInstance().getEcon().getBalance(player) < this.getPricePerPeriod()) {
+        if (AdvancedRegionMarket.getInstance().getEcon().getBalance(player) < this.getPricePerPeriod()) {
             throw new NotEnoughMoneyException(this.replaceVariables(Messages.NOT_ENOUGH_MONEY));
         }
 
@@ -725,6 +719,13 @@ public abstract class Region implements Saveable {
             }
         }
         player.sendMessage(Messages.PREFIX + Messages.REGION_BUYMESSAGE);
+        PreBuyEvent preBuyEvent = new PreBuyEvent(this, player, isPlayerInLimit);
+        Bukkit.getServer().getPluginManager().callEvent(preBuyEvent);
+        if (preBuyEvent.isCancelled()) {
+            return;
+        }
+        isPlayerInLimit = preBuyEvent.isPlayerInLimit();
+        boolean isNoMoneyTransfer = preBuyEvent.isNoMoneyTransfer();
 
         if (!isNoMoneyTransfer) {
             AdvancedRegionMarket.getInstance().getEcon().withdrawPlayer(player, this.getPricePerPeriod());
