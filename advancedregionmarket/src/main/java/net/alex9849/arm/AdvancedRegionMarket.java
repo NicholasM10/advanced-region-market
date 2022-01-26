@@ -515,7 +515,8 @@ public class AdvancedRegionMarket extends JavaPlugin {
     private boolean setupWorldGuard() {
         Plugin plugin = getServer().getPluginManager().getPlugin("WorldGuard");
 
-        if (plugin == null || !(plugin instanceof WorldGuardPlugin)) {
+        if (plugin == null /*|| !(plugin instanceof WorldGuardPlugin) */) {
+            getLogger().log(Level.INFO, "[WMC] Could not setup WorldGuard! (handler could not be loaded) Compatible WorldGuard versions: 6, 7");
             return false;
         }
         WorldGuardPlugin worldguard = (WorldGuardPlugin) plugin;
