@@ -21,6 +21,8 @@ public abstract class RegionOptionModifyCommand<SettingsObj> extends OptionModif
     private String subregionModifyErrorMessage;
     private String regex_massaction;
     private String optionName;
+    //World name of main build server.
+    private String buildWorldName = "Build";
 
     public RegionOptionModifyCommand(String rootCommand, AdvancedRegionMarket plugin, List<String> permissions, boolean forbidNullSetting, String optionName, String optionRegex,
                                      String optionDescriptipn, boolean allowSubregions, String subregionModifyErrorMessage, String settingNotFoundMsg) {
@@ -66,7 +68,14 @@ public abstract class RegionOptionModifyCommand<SettingsObj> extends OptionModif
             String selectedName = selectedRegionkind.replaceVariables(Messages.MASSACTION_SPLITTER);
             return new Tuple<>(selectedName, getPlugin().getRegionManager().getRegionsByRegionKind(selectedRegionkind));
         } else {
-            Region selectedRegion = getPlugin().getRegionManager().getRegionbyNameAndWorldCommands(args[1], player.getWorld().getName());
+            Region selectedRegion;
+            if(player == null)
+            {
+                selectedRegion = getPlugin().getRegionManager().getRegionbyNameAndWorldCommands(args[1], buildWorldName);
+            } else {
+                selectedRegion = getPlugin().getRegionManager().getRegionbyNameAndWorldCommands(args[1], player.getWorld().getName());
+            }
+
             if (selectedRegion == null) {
                 throw new InputException(sender, Messages.REGION_DOES_NOT_EXIST);
             }

@@ -37,6 +37,12 @@
             <version>3.3.5</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>net.alex9849</groupId>
+            <artifactId>advancedregionmarket</artifactId>
+            <version>3.3.7</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
