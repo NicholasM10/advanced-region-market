@@ -6,7 +6,6 @@ import net.alex9849.arm.regions.RentRegion;
 import net.alex9849.arm.regions.price.Autoprice.AutoPrice;
 import net.alex9849.arm.regions.price.RentPrice;
 import net.alex9849.arm.util.TimeUtil;
-import net.alex9849.arm.util.stringreplacer.StringCreator;
 import net.alex9849.inter.WGRegion;
 import net.alex9849.signs.SignData;
 import org.bukkit.World;
@@ -15,6 +14,7 @@ import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class RentPreset extends CountdownPreset {
     private Long maxExtendTime;
@@ -72,15 +72,20 @@ public class RentPreset extends CountdownPreset {
     @Override
     public void applyToRegion(Region region) {
         super.applyToRegion(region);
-        if (this.getPrice() != null && this.getExtendTime() != null
-                && this.getMaxExtendTime() != null && region instanceof RentRegion) {
-            ((RentRegion) region).setRentPrice(new RentPrice(this.getPrice(), this.getExtendTime(), this.getMaxExtendTime()));
+        if (region instanceof RentRegion && (this.getPrice() != null
+                || this.getExtendTime() != null || this.getMaxExtendTime() != null)) {
+            RentRegion rentRegion = (RentRegion) region;
+            RentPrice oldPrice = (RentPrice) rentRegion.getPriceObject();
+            double price = this.getPrice() != null ? this.getPrice() : oldPrice.calcPrice(region.getRegion());
+            long extendTime = this.getExtendTime() != null ? this.getExtendTime() : oldPrice.getExtendTime();
+            long maxExtendTime = this.getMaxExtendTime() != null ? this.getMaxExtendTime() : oldPrice.getMaxExtendTime();
+            rentRegion.setRentPrice(new RentPrice(price, extendTime, maxExtendTime));
         }
     }
 
     @Override
-    public HashMap<String, StringCreator> getVariableReplacements() {
-        HashMap<String, StringCreator> variableReplacements = super.getVariableReplacements();
+    public HashMap<String, Supplier<String>> getVariableReplacements() {
+        HashMap<String, Supplier<String>> variableReplacements = super.getVariableReplacements();
         variableReplacements.put("%maxextendtime%", () -> Messages.getStringValue(this.getMaxExtendTime(), x ->
                 TimeUtil.timeInMsToString(x, false, false), Messages.NOT_DEFINED));
         return variableReplacements;

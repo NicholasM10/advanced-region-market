@@ -2,12 +2,9 @@ package net.alex9849.arm.regions;
 
 import net.alex9849.arm.AdvancedRegionMarket;
 import net.alex9849.arm.Messages;
-import net.alex9849.arm.exceptions.FeatureDisabledException;
-import net.alex9849.arm.flaggroups.FlagGroup;
 import net.alex9849.arm.regions.price.Price;
 import net.alex9849.arm.util.TimeUtil;
-import net.alex9849.arm.util.stringreplacer.StringCreator;
-import net.alex9849.arm.util.stringreplacer.StringReplacer;
+import net.alex9849.arm.util.StringReplacer;
 import net.alex9849.inter.WGRegion;
 import net.alex9849.signs.SignData;
 import org.bukkit.World;
@@ -16,44 +13,11 @@ import org.bukkit.configuration.ConfigurationSection;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Supplier;
 
 public abstract class CountdownRegion extends Region {
+    private static boolean staticSaveNeeded = false;
     private long payedTill;
-    private StringReplacer stringReplacer;
-
-    {
-        HashMap<String, StringCreator> variableReplacements = new HashMap<>();
-        variableReplacements.put("%extendtime-short%", () -> {
-            return TimeUtil.timeInMsToString(this.getExtendTime(), false, false);
-        });
-        variableReplacements.put("%extendtime-writtenout%", () -> {
-            return TimeUtil.timeInMsToString(this.getExtendTime(), true, false);
-        });
-        variableReplacements.put("%remainingtime-date%", () -> {
-            return TimeUtil.getDate(this.getPayedTill(), true, Messages.REGION_INFO_EXPIRED,
-                    AdvancedRegionMarket.getInstance().getPluginSettings().getDateTimeformat());
-        });
-        variableReplacements.put("%remainingtime-countdown-short%", () -> {
-            return TimeUtil.getCountdown(this.getPayedTill(), false, false, true, Messages.REGION_INFO_EXPIRED);
-        });
-        variableReplacements.put("%remainingtime-countdown-short-cutted%", () -> {
-            return TimeUtil.getCountdown(this.getPayedTill(), false, true, true, Messages.REGION_INFO_EXPIRED);
-        });
-        variableReplacements.put("%remainingtime-countdown-writtenout%", () -> {
-            return TimeUtil.getCountdown(this.getPayedTill(), true, false, true, Messages.REGION_INFO_EXPIRED);
-        });
-        variableReplacements.put("%remainingtime-countdown-writtenout-cutted%", () -> {
-            return TimeUtil.getCountdown(this.getPayedTill(), true, true, true, Messages.REGION_INFO_EXPIRED);
-        });
-        variableReplacements.put("%priceperm2perweek%", () -> {
-            return Price.formatPrice(this.getPricePerM2PerWeek());
-        });
-        variableReplacements.put("%priceperm3perweek%", () -> {
-            return Price.formatPrice(this.getPricePerM3PerWeek());
-        });
-
-        this.stringReplacer = new StringReplacer(variableReplacements, 50);
-    }
 
     public CountdownRegion(WGRegion region, List<SignData> sellsigns, boolean sold, Region parentRegion) {
         super(region, sellsigns, sold, parentRegion);
@@ -61,28 +25,6 @@ public abstract class CountdownRegion extends Region {
 
     public CountdownRegion(WGRegion region, World regionworld, List<SignData> sellsigns, boolean sold) {
         super(region, regionworld, sellsigns, sold);
-    }
-
-    public static long stringToTime(String stringtime) throws IllegalArgumentException {
-        long time = 0;
-        if (stringtime.matches("[\\d]+d")) {
-            time = Long.parseLong(stringtime.split("d")[0]);
-            time = time * 1000 * 60 * 60 * 24;
-        } else if (stringtime.matches("[\\d]+h")) {
-            time = Long.parseLong(stringtime.split("h")[0]);
-            time = time * 1000 * 60 * 60;
-        } else if (stringtime.matches("[\\d]+m")) {
-            time = Long.parseLong(stringtime.split("m")[0]);
-            time = time * 1000 * 60;
-        } else if (stringtime.matches("[\\d]+s")) {
-            time = Long.parseLong(stringtime.split("s")[0]);
-            time = time * 1000;
-        } else if (stringtime.matches("[\\d]+")) {
-            time = Long.parseLong(stringtime);
-        } else {
-            throw new IllegalArgumentException();
-        }
-        return time;
     }
 
     public abstract long getExtendTime();
@@ -142,17 +84,12 @@ public abstract class CountdownRegion extends Region {
 
     public void extend(long time) {
         long actualTime = new GregorianCalendar().getTimeInMillis();
-        if (this.payedTill < actualTime) {
+        if (this.getPayedTill() < actualTime) {
             this.payedTill = actualTime;
         }
         this.payedTill += time;
         this.queueSave();
         this.updateSigns();
-        try {
-            this.applyFlagGroup(FlagGroup.ResetMode.NON_EDITABLE, false);
-        } catch (FeatureDisabledException e) {
-            //Ignore
-        }
     }
 
     @Override
@@ -188,11 +125,6 @@ public abstract class CountdownRegion extends Region {
         return pricePerM2PerWeek / (this.getRegion().getMaxPoint().getBlockY() - this.getRegion().getMinPoint().getBlockY());
     }
 
-    public String replaceVariables(String message) {
-        message = super.replaceVariables(message);
-        return this.stringReplacer.replace(message).toString();
-    }
-
     public ConfigurationSection toConfigurationSection() {
         ConfigurationSection cofSection = super.toConfigurationSection();
         if (this.getPriceObject().isAutoPrice()) {
@@ -200,7 +132,78 @@ public abstract class CountdownRegion extends Region {
         } else {
             cofSection.set("extendTime", this.getExtendTime());
         }
-        cofSection.set("payedTill", this.getPayedTill());
+        cofSection.set("payedTill", this.payedTill);
         return cofSection;
+    }
+
+    /*
+       Static methods
+     */
+
+    protected HashMap<String, Supplier<String>> getVariableReplacements() {
+        HashMap<String, Supplier<String>> variableReplacements = super.getVariableReplacements();
+        variableReplacements.put("%extendtime-short%", () -> {
+            return TimeUtil.timeInMsToString(this.getExtendTime(), false, false);
+        });
+        variableReplacements.put("%extendtime-writtenout%", () -> {
+            return TimeUtil.timeInMsToString(this.getExtendTime(), true, false);
+        });
+        variableReplacements.put("%remainingtime-date%", () -> {
+            return TimeUtil.getDate(this.getPayedTill(), true, Messages.REGION_INFO_EXPIRED,
+                    AdvancedRegionMarket.getInstance().getPluginSettings().getDateTimeformat());
+        });
+        variableReplacements.put("%remainingtime-countdown-short%", () -> {
+            return TimeUtil.getCountdown(this.getPayedTill(), false, false, true, Messages.REGION_INFO_EXPIRED);
+        });
+        variableReplacements.put("%remainingtime-countdown-short-cutted%", () -> {
+            return TimeUtil.getCountdown(this.getPayedTill(), false, true, true, Messages.REGION_INFO_EXPIRED);
+        });
+        variableReplacements.put("%remainingtime-countdown-writtenout%", () -> {
+            return TimeUtil.getCountdown(this.getPayedTill(), true, false, true, Messages.REGION_INFO_EXPIRED);
+        });
+        variableReplacements.put("%remainingtime-countdown-writtenout-cutted%", () -> {
+            return TimeUtil.getCountdown(this.getPayedTill(), true, true, true, Messages.REGION_INFO_EXPIRED);
+        });
+        variableReplacements.put("%priceperm2perweek%", () -> {
+            return Price.formatPrice(this.getPricePerM2PerWeek());
+        });
+        variableReplacements.put("%priceperm3perweek%", () -> {
+            return Price.formatPrice(this.getPricePerM3PerWeek());
+        });
+        return variableReplacements;
+    }
+
+    public static long stringToTime(String stringtime) throws IllegalArgumentException {
+        long time = 0;
+        if (stringtime.matches("[\\d]+d")) {
+            time = Long.parseLong(stringtime.split("d")[0]);
+            time = time * 1000 * 60 * 60 * 24;
+        } else if (stringtime.matches("[\\d]+h")) {
+            time = Long.parseLong(stringtime.split("h")[0]);
+            time = time * 1000 * 60 * 60;
+        } else if (stringtime.matches("[\\d]+m")) {
+            time = Long.parseLong(stringtime.split("m")[0]);
+            time = time * 1000 * 60;
+        } else if (stringtime.matches("[\\d]+s")) {
+            time = Long.parseLong(stringtime.split("s")[0]);
+            time = time * 1000;
+        } else if (stringtime.matches("[\\d]+")) {
+            time = Long.parseLong(stringtime);
+        } else {
+            throw new IllegalArgumentException();
+        }
+        return time;
+    }
+
+    public static void setStaticSaved() {
+        staticSaveNeeded = false;
+    }
+
+    public static void setStaticSaveNeeded() {
+        staticSaveNeeded = true;
+    }
+
+    public static boolean isStaticSaveNeeded() {
+        return staticSaveNeeded;
     }
 }

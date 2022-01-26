@@ -8,8 +8,7 @@ import net.alex9849.arm.exceptions.*;
 import net.alex9849.arm.regions.price.Autoprice.AutoPrice;
 import net.alex9849.arm.regions.price.ContractPrice;
 import net.alex9849.arm.regions.price.Price;
-import net.alex9849.arm.util.stringreplacer.StringCreator;
-import net.alex9849.arm.util.stringreplacer.StringReplacer;
+import net.alex9849.arm.util.StringReplacer;
 import net.alex9849.inter.WGRegion;
 import net.alex9849.signs.SignData;
 import org.bukkit.Bukkit;
@@ -23,23 +22,12 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 
 public class ContractRegion extends CountdownRegion {
     private ContractPrice contractPrice;
     private boolean terminated = false;
-    private StringReplacer stringReplacer;
-
-    {
-        HashMap<String, StringCreator> variableReplacements = new HashMap<>();
-        variableReplacements.put("%status%", () -> {
-            return this.terminated? Messages.CONTRACT_REGION_STATUS_TERMINATED : Messages.CONTRACT_REGION_STATUS_ACTIVE;
-        });
-        variableReplacements.put("%isterminated%", () -> {
-            return Messages.convertYesNo(this.isTerminated());
-        });
-        this.stringReplacer = new StringReplacer(variableReplacements, 50);
-    }
 
     public ContractRegion(WGRegion region, List<SignData> sellsigns, ContractPrice contractPrice, boolean sold, Region parentRegion) {
         super(region, sellsigns, sold, parentRegion);
@@ -195,6 +183,17 @@ public class ContractRegion extends CountdownRegion {
         }
     }
 
+    protected HashMap<String, Supplier<String>> getVariableReplacements() {
+        HashMap<String, Supplier<String>> variableReplacements = super.getVariableReplacements();
+        variableReplacements.put("%status%", () -> {
+            return this.terminated? Messages.CONTRACT_REGION_STATUS_TERMINATED : Messages.CONTRACT_REGION_STATUS_ACTIVE;
+        });
+        variableReplacements.put("%isterminated%", () -> {
+            return Messages.convertYesNo(this.isTerminated());
+        });
+        return variableReplacements;
+    }
+
     public void setTerminated(Boolean bool, Player player) {
         this.terminated = bool;
         this.queueSave();
@@ -238,11 +237,6 @@ public class ContractRegion extends CountdownRegion {
         double pricePerM2 = this.getPricePerM3();
         double msPerWeek = 1000 * 60 * 60 * 24 * 7;
         return (msPerWeek / this.getExtendTime()) * pricePerM2;
-    }
-
-    public String replaceVariables(String message) {
-        message = this.stringReplacer.replace(message).toString();
-        return super.replaceVariables(message);
     }
 
     public SellType getSellType() {

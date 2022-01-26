@@ -349,6 +349,7 @@ public class AdvancedRegionMarket extends JavaPlugin {
         commands.add(new SetEntityLimitCommand(this));
         commands.add(new SetLandLord(this));
         commands.add(new SetProtectionOfContinuance(this));
+        commands.add(new AddTimeCommand(this));
 
         List<String> entityLimtUsage = new ArrayList<>(Arrays.asList("entitylimit [SETTING]", "entitylimit help"));
         List<BasicArmCommand> entityLimitCommands = new ArrayList<>();
@@ -543,18 +544,17 @@ public class AdvancedRegionMarket extends JavaPlugin {
     private boolean setupWorldEdit() {
         Plugin plugin = getServer().getPluginManager().getPlugin("WorldEdit");
 
-        if (plugin == null || !(plugin instanceof WorldEditPlugin)) {
+        if (!(plugin instanceof WorldEditPlugin)) {
             return false;
         }
         WorldEditPlugin worldedit = (WorldEditPlugin) plugin;
         String version = "notSupported";
-        Boolean hasFaWeHandler = true;
+        boolean hasFaWeHandler = false;
 
         if (worldedit.getDescription().getVersion().startsWith("6.")) {
             version = "6";
         } else {
             version = "7";
-            hasFaWeHandler = false;
         }
 
         if (this.isFaWeInstalled() && hasFaWeHandler) {

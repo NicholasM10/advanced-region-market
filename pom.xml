@@ -13,7 +13,6 @@
         <module>advancedregionmarket</module>
         <module>we6adapter</module>
         <module>we7adapter</module>
-        <module>we6faweadapter</module>
         <module>mc1-12adapter</module>
         <module>mc1-13adapter</module>
         <module>mc1-14adapter</module>
@@ -41,7 +40,7 @@
         </repository>
         <repository>
             <id>enginehub</id>
-            <url>https://maven.enginehub.org/repo</url>
+            <url>https://maven.enginehub.org/repo/</url>
             <releases>
                 <enabled>true</enabled> <!-- releases enabled: this specific repository also hosts release versions -->
             </releases>
@@ -52,11 +51,6 @@
         <repository>
             <id>CodeMC</id>
             <url>https://repo.codemc.org/repository/maven-public</url>
-        </repository>
-        <!-- FAWE repository -->
-        <repository>
-            <id>fawe-repo</id>
-            <url>http://ci.athion.net/job/FastAsyncWorldEdit/ws/mvn/</url>
         </repository>
         <!--Vault repository-->
         <repository>
@@ -75,25 +69,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.1.1</version>
-                <configuration>
-                    <encoding>UTF-8</encoding>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <failOnError>false</failOnError>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>

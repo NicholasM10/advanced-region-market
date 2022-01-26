@@ -146,7 +146,6 @@ public class RegionManager extends YamlFileManager<Region> {
 
     @Override
     protected void writeStaticSettings(YamlConfiguration yamlConfiguration) {
-
     }
 
     @Override

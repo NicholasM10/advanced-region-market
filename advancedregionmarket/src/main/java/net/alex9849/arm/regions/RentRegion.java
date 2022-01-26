@@ -10,8 +10,7 @@ import net.alex9849.arm.regions.price.Autoprice.AutoPrice;
 import net.alex9849.arm.regions.price.Price;
 import net.alex9849.arm.regions.price.RentPrice;
 import net.alex9849.arm.util.TimeUtil;
-import net.alex9849.arm.util.stringreplacer.StringCreator;
-import net.alex9849.arm.util.stringreplacer.StringReplacer;
+import net.alex9849.arm.util.StringReplacer;
 import net.alex9849.inter.WGRegion;
 import net.alex9849.signs.SignData;
 import org.bukkit.Bukkit;
@@ -23,32 +22,11 @@ import org.bukkit.entity.Player;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 
 public class RentRegion extends CountdownRegion {
     private RentPrice rentPrice;
-    private StringReplacer stringReplacer;
-
-    {
-        HashMap<String, StringCreator> variableReplacements = new HashMap<>();
-        variableReplacements.put("%maxextendtime-short%", () -> {
-            return TimeUtil.timeInMsToString(this.getMaxExtendTime(), false, false);
-        });
-        variableReplacements.put("%maxextendtime-writtenout%", () -> {
-            return TimeUtil.timeInMsToString(this.getMaxExtendTime(), true, false);
-        });
-        variableReplacements.put("%extendtime-current-writtenout%", () -> {
-            return TimeUtil.timeInMsToString(this.getCurrentExtendTime(), true, false);
-        });
-        variableReplacements.put("%extendtime-current-short%", () -> {
-            return TimeUtil.timeInMsToString(this.getCurrentExtendTime(), false, false);
-        });
-        variableReplacements.put("%price-current%", () -> {
-            return Price.formatPrice(this.getCurrentExtendPrice());
-        });
-
-        this.stringReplacer = new StringReplacer(variableReplacements, 50);
-    }
 
     public RentRegion(WGRegion region, List<SignData> sellsigns, RentPrice rentPrice, boolean sold, Region parentRegion) {
         super(region, sellsigns, sold, parentRegion);
@@ -116,13 +94,13 @@ public class RentRegion extends CountdownRegion {
             throw new NotEnoughMoneyException(this.replaceVariables(Messages.NOT_ENOUGH_MONEY));
         }
 
-        //The local stringreplacer only replaces stuff like the current extend
+        // The local stringreplacer only replaces stuff like the current extend
         // time and the current price, but not the remaining time, that
         // we want to replace after the extension. So we first replace
         // with the local replacer and after successful extension we
         // replace with the normal replace method.
         double extensionCost = this.getCurrentExtendPrice();
-        String successMessage = Messages.PREFIX + this.stringReplacer.replace(Messages.RENT_EXTEND_MESSAGE);
+        String successMessage = Messages.PREFIX + this.replaceVariables(Messages.RENT_EXTEND_MESSAGE);
         this.extend();
         successMessage = this.replaceVariables(successMessage);
         if (AdvancedRegionMarket.getInstance().getPluginSettings().isTeleportAfterRentRegionExtend()) {
@@ -190,11 +168,6 @@ public class RentRegion extends CountdownRegion {
         return this.rentPrice.getExtendTime();
     }
 
-    public String replaceVariables(String message) {
-        message = super.replaceVariables(message);
-        return this.stringReplacer.replace(message).toString();
-    }
-
     public SellType getSellType() {
         return SellType.RENT;
     }
@@ -227,6 +200,26 @@ public class RentRegion extends CountdownRegion {
             lines[3] = this.replaceVariables(Messages.RENT_SIGN4);
         }
         signData.writeLines(lines);
+    }
+
+    protected HashMap<String, Supplier<String>> getVariableReplacements() {
+        HashMap<String, Supplier<String>> variableReplacements = super.getVariableReplacements();
+        variableReplacements.put("%maxextendtime-short%", () -> {
+            return TimeUtil.timeInMsToString(this.getMaxExtendTime(), false, false);
+        });
+        variableReplacements.put("%maxextendtime-writtenout%", () -> {
+            return TimeUtil.timeInMsToString(this.getMaxExtendTime(), true, false);
+        });
+        variableReplacements.put("%extendtime-current-writtenout%", () -> {
+            return TimeUtil.timeInMsToString(this.getCurrentExtendTime(), true, false);
+        });
+        variableReplacements.put("%extendtime-current-short%", () -> {
+            return TimeUtil.timeInMsToString(this.getCurrentExtendTime(), false, false);
+        });
+        variableReplacements.put("%price-current%", () -> {
+            return Price.formatPrice(this.getCurrentExtendPrice());
+        });
+        return variableReplacements;
     }
 
     public ConfigurationSection toConfigurationSection() {
