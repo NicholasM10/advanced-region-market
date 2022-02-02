@@ -265,6 +265,11 @@ public class AdvancedRegionMarket extends JavaPlugin {
         //Enable own analytics
     }
 
+    public static void UpdateRegionUnrentable(Region r, boolean value)
+    {
+        r.setProtectionOfContinuance(value);
+    }
+
     public void onDisable() {
         this.getPresetPatternManager().updateFile();
         this.getRegionManager().updateFile();
@@ -661,7 +666,6 @@ public class AdvancedRegionMarket extends JavaPlugin {
         GuiConstants.setFlagUserInputItem(MaterialFinder.getMaterial(pluginConf.getString("GUI.FlagUserInputItem")));
         GuiConstants.setFlageditorResetItem(MaterialFinder.getMaterial(pluginConf.getString("GUI.FlageditorResetItem")));
     }
-
     private void loadLimits() {
         this.limitGroupManager = new LimitGroupManager();
         ConfigurationSection limitsection = getConfig().getConfigurationSection("Limits");
